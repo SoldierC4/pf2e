@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+jq '{ "file":input_filename, "value":..|.rules?|select(. != null)|select(. != []) }' ./packs/data/**/*.json
