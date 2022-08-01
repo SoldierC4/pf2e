@@ -27,9 +27,6 @@ export class TokenConfigPF2e<TDocument extends TokenDocumentPF2e> extends TokenC
         const html = $html[0]!;
         const linkToActorSize = html.querySelector<HTMLInputElement>('input[name="flags.pf2e.linkToActorSize"]');
         if (!linkToActorSize) throw ErrorPF2e("");
-        if (linkToActorSize.checked) {
-            this.#disableScale(html);
-        }
 
         linkToActorSize.addEventListener("change", (event) => {
             if (!(event.currentTarget instanceof HTMLInputElement)) {
@@ -39,7 +36,7 @@ export class TokenConfigPF2e<TDocument extends TokenDocumentPF2e> extends TokenC
             const sizeInputs = Array.from(
                 event.currentTarget
                     .closest("fieldset")
-                    ?.querySelectorAll<HTMLInputElement>("input[type=number], input[type=range]") ?? []
+                    ?.querySelectorAll<HTMLInputElement>("input[type=number]") ?? []
             );
 
             for (const input of sizeInputs) {
@@ -63,56 +60,21 @@ export class TokenConfigPF2e<TDocument extends TokenDocumentPF2e> extends TokenC
                         input.value = this.dimensionsFromActorSize.toString();
                     }
                 }
-                this.#disableScale(html);
             } else {
                 const source = this.token._source;
                 const nameToValue = {
                     width: source.width,
                     height: source.height,
-                    scale: source.texture.scaleX,
                 };
                 for (const input of sizeInputs) {
                     if (objectHasKey(nameToValue, input.name)) {
                         input.value = nameToValue[input.name].toString();
                     }
                 }
-                this.#enableScale(html);
             }
         });
 
         this.#disableVisionInputs(html);
-    }
-
-    /** Disable the range input for token scale and style to indicate as much */
-    #disableScale(html: HTMLElement): void {
-        // If autoscaling is disabled, keep form input enabled
-        if (!game.settings.get("pf2e", "tokens.autoscale")) return;
-
-        const scale = html.querySelector(".form-group.scale");
-        if (!scale) throw ErrorPF2e("Scale form group missing");
-        scale.classList.add("children-disabled");
-
-        const constrainedScale = String(this.actor?.size === "sm" ? 0.8 : 1);
-        const rangeInput = scale.querySelector<HTMLInputElement>("input[type=range]");
-        if (rangeInput) {
-            rangeInput.disabled = true;
-            rangeInput.value = constrainedScale;
-            const rangeDisplayValue = scale.querySelector(".range-value");
-            if (rangeDisplayValue) rangeDisplayValue.innerHTML = constrainedScale;
-        }
-    }
-
-    /** Reenable range input for token scale and restore normal styling */
-    #enableScale(html: HTMLElement): void {
-        const scale = html.querySelector(".form-group.scale");
-        if (!scale) throw ErrorPF2e("Scale form group missing");
-        scale.classList.remove("children-disabled");
-        const rangeInput = scale.querySelector<HTMLInputElement>("input[type=range]");
-        if (rangeInput) {
-            rangeInput.disabled = false;
-            const rangeDisplayValue = scale.querySelector(".range-value");
-            if (rangeDisplayValue) rangeDisplayValue.innerHTML = rangeInput.value;
-        }
     }
 
     #disableVisionInputs(html: HTMLElement): void {
