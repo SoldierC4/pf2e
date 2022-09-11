@@ -764,8 +764,45 @@ def parse_spell(item, pack):
 
     # TODO Ritual Cost/Materials
     # TODO Spell range
-    # TODO Spell area
     # TODO Spell duration
+
+
+def parse_spell_area(item, pack):
+    src = item["_source"]
+    name = src["name"]
+
+    area = src.get("area", None)
+    if not area:
+        return
+
+    areas = area.split()
+    if not areas[0].endswith("-foot"):
+        return
+
+    area_size = areas[0].removesuffix("-foot")
+
+    if areas[1] not in { "burst", "cone", "cube", "emanation", "line", "square" }:
+        return
+
+    area_type = areas[1]
+
+    #area = {
+    #    "Thoughtful Gift": "1 (up to 3 if heightened)",  # Weirdness
+    #}.get(name, time)
+
+    print(f"{name}: {area_size} {area_type}")
+    if area_type:
+        if "areaType" not in pack.obj["data"]["area"] or area_type != pack.obj["data"]["area"]["areaType"]:
+            pack.obj["data"]["area"]["areaType"] = area_type
+            pack.modify()
+
+    if area_size != pack.obj["data"]["area"]["value"]:
+        pack.obj["data"]["area"]["value"] = area_size
+        pack.modify()
+
+    if "areasize" in pack.obj["data"]:
+        pack.obj["data"].pop("areasize")
+        pack.modify()
 
 
 def parse_source(item, pack):
@@ -1231,6 +1268,7 @@ def main():
                 case "Cantrip" | "Focus" | "Spell" | "Ritual":
                     parse_traits(item, pack)
                     parse_spell(item, pack)
+                    parse_spell_area(item, pack)
                 case "Item" | "Weapon" | "Armor" | "Shield":
                     parse_item(item, pack)
 
